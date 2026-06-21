@@ -38,11 +38,11 @@
     align-items:center;
     justify-content:flex-start;
     min-height:100dvh;
-    background:#0c1830;
+    background:#202F3A;
     font-family:'Press Start 2P', monospace;
     color:var(--ui-text);
-    padding:10px;
-    gap:10px;
+    padding:0;
+    gap:0;
   }
 
   #page{
@@ -52,13 +52,11 @@
     width:100%;
     max-width:480px;
     height:100%;
-    gap:12px;
+    gap:0;
   }
 
   #wrap{
     position:relative;
-    border:6px solid var(--panel-border);
-    box-shadow:0 0 0 3px #fffbe8, 0 8px 0 #00000055;
     image-rendering:pixelated;
     width:100%;
     flex:1 1 auto;
@@ -86,11 +84,14 @@
   }
 
   #jumpBtn{
-    width:100%;
-    flex:0 0 auto;
-    height:clamp(90px, 16vh, 140px);
+    position:absolute;
+    left:50%;
+    bottom:9%;
+    transform:translateX(-50%);
+    width:clamp(140px, 45%, 220px);
+    height:clamp(60px, 12vh, 88px);
     font-family:'Press Start 2P', monospace;
-    font-size:clamp(14px, 5vw, 22px);
+    font-size:clamp(13px, 4vw, 18px);
     letter-spacing:2px;
     color:#fffbe8;
     background:#0a7ad0;
@@ -101,11 +102,12 @@
     -webkit-user-select:none;
     touch-action:none;
     cursor:pointer;
+    z-index:5;
   }
 
   #jumpBtn:active,
   #jumpBtn.pressed{
-    transform:translateY(4px);
+    transform:translateX(-50%) translateY(4px);
     box-shadow:0 2px 0 var(--pipe-dark);
     background:var(--pipe-dark);
   }
@@ -150,9 +152,8 @@
       <h1 id="overlayTitle">GAME OVER</h1>
       <p id="overlayScore"></p>
     </div>
+    <button id="jumpBtn">JUMP</button>
   </div>
-
-  <button id="jumpBtn">JUMP</button>
 </div>
 
 <script>
@@ -164,7 +165,8 @@
   const wrapEl = document.getElementById('wrap');
 
   let W = canvas.width, H = canvas.height;
-  let GROUND_Y = H - 90;
+  const GROUND_BAND = 240; // total height of grass+dirt ground strip -- change this number to make the ground taller/shorter
+  let GROUND_Y = H - GROUND_BAND;
 
   function resizeCanvas(){
     const newW = Math.max(200, Math.round(canvas.clientWidth));
@@ -173,7 +175,7 @@
 
     W = canvas.width = newW;
     H = canvas.height = newH;
-    GROUND_Y = H - 90;
+    GROUND_Y = H - GROUND_BAND;
     ctx.imageSmoothingEnabled = false;
 
     // keep the player resting on the ground if it's not mid-jump
