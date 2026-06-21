@@ -165,7 +165,7 @@
   const wrapEl = document.getElementById('wrap');
 
   let W = canvas.width, H = canvas.height;
-  const GROUND_BAND = 240; // total height of grass+dirt ground strip -- change this number to make the ground taller/shorter
+  const GROUND_BAND = 140; // total height of grass+dirt ground strip -- change this number to make the ground taller/shorter
   let GROUND_Y = H - GROUND_BAND;
 
   function resizeCanvas(){
@@ -426,12 +426,12 @@
   // ---------------------------------------------------------------
   // MAIN LOOP
   // ---------------------------------------------------------------
-  function update(){
+  function update(dt){
     if(!running) return;
 
     // physics
-    player.vy += GRAVITY;
-    player.y += player.vy;
+    player.vy += GRAVITY * dt;
+    player.y += player.vy * dt;
     if(player.y >= GROUND_Y - CHAR_H){
       player.y = GROUND_Y - CHAR_H;
       player.vy = 0;
@@ -439,24 +439,24 @@
     }
 
     // run animation timing
-    runFrameTimer++;
+    runFrameTimer += dt;
     if(runFrameTimer > 6){
       runFrameTimer = 0;
       runFrameToggle = !runFrameToggle;
     }
 
     // scroll
-    groundOffset += speed;
-    cloudOffset += speed*0.2;
+    groundOffset += speed * dt;
+    cloudOffset += speed*0.2 * dt;
 
     // pipes
-    spawnTimer++;
+    spawnTimer += dt;
     if(spawnTimer > nextSpawnGap){
       spawnTimer = 0;
       nextSpawnGap = 70 + Math.random()*60;
       spawnPipe();
     }
-    for(const p of pipes){ p.x -= speed; }
+    for(const p of pipes){ p.x -= speed * dt; }
     pipes = pipes.filter(p => p.x + p.w > -20);
 
     // collision (slightly inset hitbox for fairness)
@@ -472,7 +472,7 @@
     }
 
     // score + difficulty
-    score += 0.12;
+    score += 0.12 * dt;
     speed = 5 + score*0.01;
     hud.textContent = 'SCORE ' + Math.floor(score);
   }
@@ -484,8 +484,19 @@
     drawCharacter();
   }
 
-  function loop(){
-    update();
+  // Time-based loop: dt is normalized so dt=1 means "one frame at a
+  // reference 60fps". On a 120Hz screen, frames fire twice as often
+  // but each delta is half as long, so dt ends up ~0.5 per frame --
+  // movement per second stays the same no matter the refresh rate.
+  let lastTime = null;
+  function loop(timestamp){
+    if(lastTime === null) lastTime = timestamp;
+    const deltaMs = timestamp - lastTime;
+    lastTime = timestamp;
+    // clamp dt so a dropped/backgrounded tab doesn't cause one huge jump
+    const dt = Math.min(Math.max(deltaMs, 0) / (1000/60), 3);
+
+    update(dt);
     render();
     requestAnimationFrame(loop);
   }
@@ -500,7 +511,7 @@
 
   // initial idle frame before start
   render();
-  loop();
+  requestAnimationFrame(loop);
 })();
 </script>
 
